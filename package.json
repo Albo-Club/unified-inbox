@@ -61,7 +61,9 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/router-plugin": "^1.167.35",
+    "@types/mailparser": "^3.4.6",
     "@types/node": "^22.10.5",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^6.0.1",
