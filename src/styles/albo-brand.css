@@ -1,0 +1,149 @@
+/* ============================================================================
+ * Albo Brand — surcharge des CSS variables shadcn + classes utilitaires typo
+ *
+ * Override-able : un projet client non-Albo peut surcharger ces vars dans son
+ * propre CSS importé APRÈS celui-ci, ou supprimer ce fichier pour revenir aux
+ * défauts shadcn neutral.
+ *
+ * Source : charte graphique Albo Studio (figée 2026-05).
+ * ========================================================================== */
+
+@font-face {
+  font-family: 'Leitura News Roman';
+  src: url('/fonts/leitura/LeituraNewsRoman1.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Leitura News Italic';
+  src: url('/fonts/leitura/LeituraNewsItalic1.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* Couleurs Albo (override des shadcn defaults) */
+  --background: #f4f3ef;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #cd4d28;
+  --primary-foreground: #ffffff;
+  --secondary: #d2d0f4;
+  --secondary-foreground: #000000;
+  --muted: #f4f3ef;
+  --muted-foreground: #979ab4;
+  --accent: #fbe055;
+  --accent-foreground: #000000;
+  --success: #84cd96;
+  --success-foreground: #000000;
+  --destructive: #cd4d28;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.08);
+  --ring: #cd4d28;
+
+  --radius: 9px;
+
+  --font-display: 'Leitura News Roman', 'Playfair Display', Georgia, serif;
+  --font-display-italic: 'Leitura News Italic', 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #f4f3ef;
+  --card: #0a0a0a;
+  --card-foreground: #f4f3ef;
+  --popover: #0a0a0a;
+  --popover-foreground: #f4f3ef;
+  --primary: #cd4d28;
+  --primary-foreground: #ffffff;
+  --secondary: #2a2840;
+  --secondary-foreground: #d2d0f4;
+  --muted: #1a1a1a;
+  --muted-foreground: #979ab4;
+  --accent: #fbe055;
+  --accent-foreground: #000000;
+  --success: #84cd96;
+  --success-foreground: #000000;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #cd4d28;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Albo typo utilities — usage: <h1 className="albo-h1">Title</h1> */
+
+.albo-h1 {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 64px;
+  letter-spacing: -0.05em;
+}
+
+.albo-h2 {
+  font-family: var(--font-display-italic);
+  font-size: 48px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 48px;
+  letter-spacing: -0.05em;
+}
+
+.albo-h3 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 36px;
+  letter-spacing: -0.04em;
+}
+
+.albo-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 30px;
+  letter-spacing: -0.03em;
+}
+
+.albo-subtitle {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 26px;
+  letter-spacing: -0.02em;
+}
+
+.albo-paragraph {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+}
+
+@media (max-width: 768px) {
+  .albo-h1 {
+    font-size: 40px;
+    line-height: 42px;
+  }
+  .albo-h2 {
+    font-size: 32px;
+    line-height: 34px;
+  }
+  .albo-h3 {
+    font-size: 26px;
+    line-height: 30px;
+  }
+}

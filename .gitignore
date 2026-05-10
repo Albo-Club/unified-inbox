@@ -1,0 +1,39 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# build
+dist
+.output
+.tanstack
+.vinxi
+.netlify
+
+# env
+.env
+.env.local
+.env.*.local
+
+# convex
+convex/_generated
+
+# tanstack
+src/routeTree.gen.ts
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# misc
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.tsbuildinfo
+
+# tmp
+/tmp/*
+!/tmp/.gitkeep
