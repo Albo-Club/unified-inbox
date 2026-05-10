@@ -47,20 +47,27 @@ function getModel(modelOverride?: string) {
   });
 }
 
-const SYSTEM_PROMPT = `You are a personal productivity assistant inside the user's todo app.
+const SYSTEM_PROMPT = `You are a personal productivity assistant inside the user's app.
 
-You have tools to help the user manage their todos:
-- READ tools (searchTodos, getTodoStats) — execute these directly to find or summarize.
-- WRITE PROPOSAL tools (proposeCreateTodo, proposeUpdateTodo, proposeToggleTodo, proposeDeleteTodo) —
-  these never execute directly. Each call returns a "pending" result, which the UI shows to the user
+You have tools to help the user manage their todos and emails:
+
+TODO tools:
+- READ: searchTodos, getTodoStats — execute these directly to find or summarize.
+- WRITE PROPOSAL: proposeCreateTodo, proposeUpdateTodo, proposeToggleTodo, proposeDeleteTodo —
+  these never execute directly. Each returns a "pending" result that the UI shows to the user
   as a Confirm/Cancel preview card. The user must confirm before the action takes effect.
+
+EMAIL tools:
+- READ: searchEmails, getEmailThread — execute these directly to find or read.
+- WRITE PROPOSAL: proposeReply, proposeMarkRead, proposeArchive, proposeTrash — must be confirmed.
+- For summarization, just write the summary directly in your response after reading the thread.
 
 Guidelines:
 - Be concise. Bullet points and short sentences. No hedging.
-- When the user asks to add/update/toggle/delete something, ALWAYS use the propose* tools — never claim you've done it directly.
+- When the user asks to write/send/archive/trash/mark-read, ALWAYS use the propose* tools — never claim you've done it directly.
 - After proposing, briefly tell the user "I've prepared the change — confirm it above" and stop.
-- When showing search results, group by done state if it helps and highlight overdue items.
-- Mirror the user's language (default English).
+- When showing search results, highlight the most relevant items first.
+- Mirror the user's language (default English; French if the user writes in French).
 - Today's date: ${new Date().toISOString().slice(0, 10)}.`;
 
 /* ============================================================================
@@ -81,6 +88,16 @@ const messageSchema = v.object({
   content: v.string(),
 });
 
+type PendingActionType =
+  | 'create'
+  | 'update'
+  | 'toggle'
+  | 'delete'
+  | 'reply'
+  | 'markRead'
+  | 'archive'
+  | 'trash';
+
 export const sendMessage = action({
   args: {
     messages: v.array(messageSchema),
@@ -92,7 +109,7 @@ export const sendMessage = action({
     text: string;
     pendingActions: Array<{
       toolCallId: string;
-      type: 'create' | 'update' | 'toggle' | 'delete';
+      type: PendingActionType;
       payload: Record<string, unknown>;
     }>;
   }> => {
@@ -173,6 +190,88 @@ export const sendMessage = action({
           return { pending: { type: 'delete' as const, payload: input } };
         },
       }),
+
+      /* ------------------------------------------------------------------
+       * EMAIL READ TOOLS
+       * ---------------------------------------------------------------- */
+
+      searchEmails: tool({
+        description:
+          "Search the user's emails (across all accounts and folders) by free-text query. Use this to find specific emails before summarizing or proposing actions.",
+        inputSchema: z.object({
+          query: z.string().min(1).describe('Lowercase substring of subject/sender/snippet'),
+          limit: z.number().int().min(1).max(50).optional().default(20),
+        }),
+        execute: async ({ query, limit }) => {
+          return await ctx.runQuery(api.emails.listByFolder, {
+            folder: 'all',
+            search: query,
+            limit,
+          });
+        },
+      }),
+
+      getEmailThread: tool({
+        description:
+          'Fetch all messages in an email thread (oldest first). Use to read the full context before drafting a reply or summary.',
+        inputSchema: z.object({ threadId: z.string() }),
+        execute: async ({ threadId }) => {
+          return await ctx.runQuery(api.emails.getThread, { threadId });
+        },
+      }),
+
+      /* ------------------------------------------------------------------
+       * EMAIL WRITE PROPOSAL TOOLS — must be confirmed by the user.
+       * ---------------------------------------------------------------- */
+
+      proposeReply: tool({
+        description:
+          "Propose sending a reply to an email. Returns a pending preview the user must confirm. Write the full draft body yourself based on the thread context.",
+        inputSchema: z.object({
+          emailId: z.string().describe('Convex Id<emails> of the message being replied to'),
+          accountId: z
+            .string()
+            .describe('Convex Id<emailAccounts> to send from')
+            .optional(),
+          to: z.string().optional(),
+          cc: z.string().optional(),
+          subject: z.string().optional(),
+          bodyHtml: z.string().describe('Full HTML body of the proposed reply'),
+        }),
+        execute: async (input) => {
+          return { pending: { type: 'reply' as const, payload: input } };
+        },
+      }),
+
+      proposeMarkRead: tool({
+        description: 'Propose marking one or more emails as read. User must confirm.',
+        inputSchema: z.object({
+          emailIds: z.array(z.string()).min(1),
+        }),
+        execute: async (input) => {
+          return { pending: { type: 'markRead' as const, payload: input } };
+        },
+      }),
+
+      proposeArchive: tool({
+        description: 'Propose archiving (removing from INBOX) one or more emails. User must confirm.',
+        inputSchema: z.object({
+          emailIds: z.array(z.string()).min(1),
+        }),
+        execute: async (input) => {
+          return { pending: { type: 'archive' as const, payload: input } };
+        },
+      }),
+
+      proposeTrash: tool({
+        description: 'Propose moving one or more emails to trash. User must confirm.',
+        inputSchema: z.object({
+          emailIds: z.array(z.string()).min(1),
+        }),
+        execute: async (input) => {
+          return { pending: { type: 'trash' as const, payload: input } };
+        },
+      }),
     };
 
     const result = await generateText({
@@ -186,7 +285,7 @@ export const sendMessage = action({
     // Extract pending tool calls from steps
     const pendingActions: Array<{
       toolCallId: string;
-      type: 'create' | 'update' | 'toggle' | 'delete';
+      type: PendingActionType;
       payload: Record<string, unknown>;
     }> = [];
     for (const step of result.steps) {
@@ -195,7 +294,7 @@ export const sendMessage = action({
         if (out && typeof out === 'object' && 'pending' in out && out.pending) {
           pendingActions.push({
             toolCallId: toolResult.toolCallId,
-            type: out.pending.type as 'create' | 'update' | 'toggle' | 'delete',
+            type: out.pending.type as PendingActionType,
             payload: (out.pending.payload ?? {}) as Record<string, unknown>,
           });
         }
