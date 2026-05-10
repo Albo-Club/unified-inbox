@@ -1,9 +1,11 @@
-import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
+import { createRootRoute, HeadContent, Link, Outlet, Scripts } from '@tanstack/react-router';
 import { Providers } from '~/components/Providers';
 import { Toaster } from '~/components/ui/sonner';
+import { Button } from '~/components/ui/button';
 import appCss from '~/styles/app.css?url';
 
 export const Route = createRootRoute({
+  notFoundComponent: NotFound,
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -50,5 +52,19 @@ function RootDocument() {
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function NotFound() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
+      <p className="albo-title text-2xl">Page introuvable</p>
+      <p className="text-sm text-muted-foreground max-w-sm">
+        L&apos;adresse que vous cherchez n&apos;existe pas, ou plus.
+      </p>
+      <Button asChild>
+        <Link to="/">Retour à l&apos;accueil</Link>
+      </Button>
+    </div>
   );
 }
