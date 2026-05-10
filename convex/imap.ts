@@ -259,7 +259,7 @@ export const fetchBodyImap = internalAction({
         const source = await client.download(uid, undefined, { uid: true });
         const parsed = await simpleParser(source.content);
         const html = parsed.html || parsed.textAsHtml || '';
-        await ctx.runAction(internal.emails.setBody, {
+        await ctx.runAction(internal.sanitize.setBody, {
           emailId: email._id,
           bodyHtml: html,
           bodyText: parsed.text || undefined,

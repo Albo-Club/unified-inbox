@@ -1,7 +1,6 @@
 import { ConvexError, v } from 'convex/values';
 import {
   action,
-  internalAction,
   internalMutation,
   internalQuery,
   mutation,
@@ -13,7 +12,6 @@ import {
 import type { Doc, Id } from './_generated/dataModel';
 import { api, internal } from './_generated/api';
 import { requireAppUser } from './users';
-import { sanitizeHtml } from './lib/sanitize';
 
 /* ============================================================================
  * Email CRUD — reads from the cache, writes through to Gmail/IMAP via actions.
@@ -522,28 +520,9 @@ export const setBodyStorage = internalMutation({
   },
 });
 
-/**
- * Action: sanitize + store + link a new HTML body for an email. Called from
- * gmail.fetchBody and imap.fetchBodyImap.
- */
-export const setBody = internalAction({
-  args: {
-    emailId: v.id('emails'),
-    bodyHtml: v.string(),
-    bodyText: v.optional(v.string()),
-  },
-  handler: async (ctx: ActionCtx, args) => {
-    const sanitized = sanitizeHtml(args.bodyHtml);
-    const storageId = await ctx.storage.store(
-      new Blob([sanitized], { type: 'text/html' }),
-    );
-    await ctx.runMutation(internal.emails.setBodyStorage, {
-      emailId: args.emailId,
-      bodyStorageId: storageId,
-      bodyText: args.bodyText,
-    });
-  },
-});
+/* `setBody` (sanitize + store + link) lives in convex/sanitize.ts under
+ * `'use node'` because `isomorphic-dompurify` needs the Node runtime.
+ * Callers (gmail.ts, imap.ts) reference `internal.sanitize.setBody`. */
 
 /** Delete an email (used by trash flow that removes from cache entirely). */
 export const deleteEmail = internalMutation({

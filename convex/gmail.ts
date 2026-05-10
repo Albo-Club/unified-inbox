@@ -408,7 +408,7 @@ export const fetchBody = internalAction({
       });
       const { html, text } = extractBodies(msg.data.payload);
       const final = html || `<pre>${text}</pre>`;
-      await ctx.runAction(internal.emails.setBody, {
+      await ctx.runAction(internal.sanitize.setBody, {
         emailId: email._id,
         bodyHtml: final,
         bodyText: text || undefined,
