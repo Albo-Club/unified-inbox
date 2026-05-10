@@ -11,10 +11,8 @@ import { cn } from '~/lib/utils';
 
 type Role = 'user' | 'assistant' | 'system';
 
-type TodoActionType = 'create' | 'update' | 'toggle' | 'delete';
 // Match backend `PendingActionType` in convex/agent.ts.
-type EmailActionType = 'reply' | 'markRead' | 'archive' | 'trash';
-type ActionType = TodoActionType | EmailActionType;
+type ActionType = 'reply' | 'markRead' | 'archive' | 'trash';
 
 interface PendingAction {
   toolCallId: string;
@@ -34,15 +32,11 @@ const WELCOME: Message = {
   id: 'welcome',
   role: 'assistant',
   content:
-    "Hi — I'm your todo assistant. Ask me what's on your plate, or tell me to add / update / clean up todos. I'll always ask for your confirmation before changing anything.",
+    "Hi — I'm your email assistant. Ask me to find threads, summarize a conversation, or draft a reply. I'll always ask for your confirmation before sending or modifying anything.",
 };
 
 export function ChatSidebar() {
   const sendMessage = useAction(api.agent.sendMessage);
-  const createTodo = useMutation(api.todos.create);
-  const updateTodo = useMutation(api.todos.update);
-  const toggleTodo = useMutation(api.todos.toggle);
-  const removeTodo = useMutation(api.todos.remove);
 
   // Email mutations — wired to the unified-inbox backend.
   const saveDraft = useMutation(api.emails.saveDraft);
@@ -101,36 +95,6 @@ export function ChatSidebar() {
   async function handleConfirm(messageId: string, action: PendingAction) {
     try {
       switch (action.type) {
-        case 'create': {
-          const p = action.payload as { title: string; notes?: string; dueAt?: number };
-          await createTodo({ title: p.title, notes: p.notes, dueAt: p.dueAt });
-          break;
-        }
-        case 'update': {
-          const p = action.payload as {
-            id: string;
-            title?: string;
-            notes?: string;
-            dueAt?: number;
-          };
-          await updateTodo({
-            id: p.id as Id<'todos'>,
-            title: p.title,
-            notes: p.notes,
-            dueAt: p.dueAt,
-          });
-          break;
-        }
-        case 'toggle': {
-          const p = action.payload as { id: string };
-          await toggleTodo({ id: p.id as Id<'todos'> });
-          break;
-        }
-        case 'delete': {
-          const p = action.payload as { id: string };
-          await removeTodo({ id: p.id as Id<'todos'> });
-          break;
-        }
         case 'reply': {
           const p = action.payload as {
             emailId: string;
@@ -306,12 +270,6 @@ function PendingActionCard({
 }) {
   const isPending = action.status === 'pending';
   const label = describeAction(action);
-  const isEmail =
-    action.type === 'reply' ||
-    action.type === 'markRead' ||
-    action.type === 'archive' ||
-    action.type === 'trash';
-
   return (
     <div
       className={cn(
@@ -324,11 +282,7 @@ function PendingActionCard({
       )}
     >
       <div className="flex items-start gap-2">
-        {isEmail ? (
-          <Mail className="size-3.5 mt-0.5 text-primary shrink-0" />
-        ) : (
-          <Sparkles className="size-3.5 mt-0.5 text-primary shrink-0" />
-        )}
+        <Mail className="size-3.5 mt-0.5 text-primary shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="font-medium text-xs uppercase tracking-wide text-primary mb-1">
             {action.status === 'confirmed'
@@ -357,31 +311,6 @@ function PendingActionCard({
 
 function describeAction(a: PendingAction): string {
   switch (a.type) {
-    case 'create': {
-      const p = a.payload as { title?: string; notes?: string };
-      return `Create todo "${p.title ?? '(no title)'}"${p.notes ? ' with notes' : ''}.`;
-    }
-    case 'update': {
-      const p = a.payload as { title?: string; notes?: string };
-      const parts: string[] = [];
-      if (p.title) parts.push(`title → "${p.title}"`);
-      if (p.notes !== undefined) parts.push('update notes');
-      return `Update todo: ${parts.join(', ') || 'no changes'}.`;
-    }
-    case 'toggle':
-      return 'Toggle done state of a todo.';
-    case 'delete':
-      return 'Delete a todo.';
-    case 'reply':
-    case 'markRead':
-    case 'archive':
-    case 'trash':
-      return describeEmailAction(a);
-  }
-}
-
-function describeEmailAction(a: PendingAction): string {
-  switch (a.type) {
     case 'reply': {
       const p = a.payload as { subject?: string; to?: string };
       return p.subject
@@ -403,8 +332,6 @@ function describeEmailAction(a: PendingAction): string {
       const n = p.emailIds?.length ?? 1;
       return n > 1 ? `Supprimer ${n} emails.` : 'Supprimer cet email.';
     }
-    default:
-      return '';
   }
 }
 

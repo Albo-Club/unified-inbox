@@ -4,7 +4,6 @@ import { useMutation, useQuery } from 'convex/react';
 import { useEffect, useState } from 'react';
 import {
   Check,
-  LayoutDashboard,
   LogOut,
   Mail,
   PanelRightClose,
@@ -67,16 +66,13 @@ function AppLayout() {
     <div className="min-h-screen h-screen bg-background text-foreground flex overflow-hidden">
       {/* Left nav */}
       <aside className="w-56 border-r border-border/50 bg-card flex flex-col shrink-0">
-        <Link to="/app" className="albo-title block px-6 py-5 border-b border-border/50">
-          Albo MVP
+        <Link
+          to="/app/mail"
+          className="block px-6 py-5 border-b border-border/50 text-sm font-semibold tracking-tight"
+        >
+          Unified Inbox
         </Link>
         <nav className="flex-1 px-3 py-4 space-y-1">
-          <NavItem
-            to="/app"
-            label="Todos"
-            icon={<LayoutDashboard className="size-4" />}
-            current={location.pathname === '/app'}
-          />
           <NavItem
             to="/app/mail"
             label="Mail"
@@ -185,7 +181,7 @@ function FullPageSpinner({ label }: { label: string }) {
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="flex items-center gap-3 text-muted-foreground">
         <Check className="size-4 animate-spin" />
-        <span className="albo-paragraph">{label}</span>
+        <span className="text-sm">{label}</span>
       </div>
     </div>
   );

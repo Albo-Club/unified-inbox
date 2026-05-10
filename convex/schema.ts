@@ -21,19 +21,6 @@ export default defineSchema({
     .index('by_auth_user_id', ['authUserId'])
     .index('by_email', ['email']),
 
-  /** A simple to-do with optional notes. Demo feature for the MVP. */
-  todos: defineTable({
-    userId: v.id('users'),
-    title: v.string(),
-    notes: v.string(), // markdown body, can be ''
-    done: v.boolean(),
-    dueAt: v.optional(v.number()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index('by_user', ['userId'])
-    .index('by_user_done', ['userId', 'done']),
-
   /* ==========================================================================
    * Unified Email — feature
    * ======================================================================== */

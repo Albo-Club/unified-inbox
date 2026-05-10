@@ -47,20 +47,14 @@ function getModel(modelOverride?: string) {
   });
 }
 
-const SYSTEM_PROMPT = `You are a personal productivity assistant inside the user's app.
+const SYSTEM_PROMPT = `You are a personal email assistant inside the user's unified inbox.
 
-You have tools to help the user manage their todos and emails:
-
-TODO tools:
-- READ: searchTodos, getTodoStats — execute these directly to find or summarize.
-- WRITE PROPOSAL: proposeCreateTodo, proposeUpdateTodo, proposeToggleTodo, proposeDeleteTodo —
-  these never execute directly. Each returns a "pending" result that the UI shows to the user
-  as a Confirm/Cancel preview card. The user must confirm before the action takes effect.
-
-EMAIL tools:
+You have tools to help the user manage their emails:
 - READ: searchEmails, getEmailThread — execute these directly to find or read.
-- WRITE PROPOSAL: proposeReply, proposeMarkRead, proposeArchive, proposeTrash — must be confirmed.
-- For summarization, just write the summary directly in your response after reading the thread.
+- WRITE PROPOSAL: proposeReply, proposeMarkRead, proposeArchive, proposeTrash —
+  these never execute directly. Each returns a "pending" result that the UI shows
+  as a Confirm/Cancel preview card. The user must confirm before the action takes effect.
+- For summarization, write the summary directly in your response after reading the thread.
 
 Guidelines:
 - Be concise. Bullet points and short sentences. No hedging.
@@ -74,13 +68,8 @@ Guidelines:
  * Action: sendMessage
  *
  * Single-turn-ish: the user sends the full message history; we run the LLM with
- * tools and return whatever new messages came out (assistant + tool calls + tool
- * results). The client appends them to its local thread and renders any pending
- * tool-call previews.
- *
- * Threading / persistence is intentionally OUT-OF-SCOPE for the MVP — keep state
- * in client memory. Add @convex-dev/agent thread persistence per project if you
- * need history across sessions.
+ * tools and return whatever new messages came out. The client appends them to
+ * its local thread and renders any pending tool-call previews.
  * ========================================================================= */
 
 const messageSchema = v.object({
@@ -88,15 +77,7 @@ const messageSchema = v.object({
   content: v.string(),
 });
 
-type PendingActionType =
-  | 'create'
-  | 'update'
-  | 'toggle'
-  | 'delete'
-  | 'reply'
-  | 'markRead'
-  | 'archive'
-  | 'trash';
+type PendingActionType = 'reply' | 'markRead' | 'archive' | 'trash';
 
 export const sendMessage = action({
   args: {
@@ -120,77 +101,12 @@ export const sendMessage = action({
     }
 
     const modelMessages: ModelMessage[] = args.messages.map((m) => {
-      // ai SDK ModelMessage has limited roles per content type; coerce simply.
       if (m.role === 'system') return { role: 'system', content: m.content };
       if (m.role === 'assistant') return { role: 'assistant', content: m.content };
-      // tool messages skipped — we re-run from user/assistant text only
       return { role: 'user', content: m.content };
     });
 
     const tools = {
-      searchTodos: tool({
-        description:
-          'Search the user\'s todos by title/notes substring. Optionally filter by done state.',
-        inputSchema: z.object({
-          query: z.string().optional(),
-          done: z.boolean().optional(),
-          limit: z.number().int().min(1).max(50).optional().default(10),
-        }),
-        execute: async ({ query, done, limit }) => {
-          return await ctx.runQuery(api.todos.search, { query, done, limit });
-        },
-      }),
-
-      getTodoStats: tool({
-        description: 'Get aggregate stats for the user: total / done / open / overdue counts.',
-        inputSchema: z.object({}),
-        execute: async () => {
-          return await ctx.runQuery(api.todos.getMyStats, {});
-        },
-      }),
-
-      proposeCreateTodo: tool({
-        description:
-          'Propose creating a new todo. Returns a pending preview that the user must confirm.',
-        inputSchema: z.object({
-          title: z.string().min(1),
-          notes: z.string().optional(),
-          dueAt: z.number().int().optional(),
-        }),
-        execute: async (input) => {
-          return { pending: { type: 'create' as const, payload: input } };
-        },
-      }),
-
-      proposeUpdateTodo: tool({
-        description: 'Propose updating an existing todo. User must confirm.',
-        inputSchema: z.object({
-          id: z.string(),
-          title: z.string().optional(),
-          notes: z.string().optional(),
-          dueAt: z.number().int().optional(),
-        }),
-        execute: async (input) => {
-          return { pending: { type: 'update' as const, payload: input } };
-        },
-      }),
-
-      proposeToggleTodo: tool({
-        description: 'Propose toggling done state of a todo. User must confirm.',
-        inputSchema: z.object({ id: z.string() }),
-        execute: async (input) => {
-          return { pending: { type: 'toggle' as const, payload: input } };
-        },
-      }),
-
-      proposeDeleteTodo: tool({
-        description: 'Propose deleting a todo. User must confirm.',
-        inputSchema: z.object({ id: z.string() }),
-        execute: async (input) => {
-          return { pending: { type: 'delete' as const, payload: input } };
-        },
-      }),
-
       /* ------------------------------------------------------------------
        * EMAIL READ TOOLS
        * ---------------------------------------------------------------- */

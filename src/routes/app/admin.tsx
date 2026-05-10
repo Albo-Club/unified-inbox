@@ -25,8 +25,8 @@ function AdminPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           <Stat label="Users" value={stats.totalUsers} />
           <Stat label="Admins" value={stats.totalAdmins} />
-          <Stat label="Todos" value={stats.totalTodos} />
-          <Stat label="Done" value={stats.doneTodos} />
+          <Stat label="Accounts" value={stats.totalAccounts} />
+          <Stat label="Emails" value={stats.totalEmails} />
         </div>
       )}
 

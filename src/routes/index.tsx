@@ -10,7 +10,7 @@ function LandingPage() {
     <main className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="border-b border-border/50">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <span className="albo-title text-foreground">Albo MVP</span>
+          <span className="text-sm font-semibold tracking-tight">Unified Inbox</span>
           <nav className="flex items-center gap-3">
             <Button variant="ghost" asChild>
               <Link to="/login">Sign in</Link>
@@ -23,19 +23,13 @@ function LandingPage() {
       </header>
 
       <section className="flex-1 mx-auto max-w-6xl w-full px-6 py-24 flex flex-col items-start gap-8">
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground">
-          <span className="size-2 rounded-full bg-primary" />
-          AI-first scaffold by Studio Albo
-        </div>
-
-        <h1 className="albo-h1 max-w-3xl">
-          Ship your next idea in <span className="italic">minutes</span>, not weeks.
+        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight max-w-3xl">
+          All your Gmail accounts in one calm inbox.
         </h1>
 
-        <p className="albo-subtitle max-w-2xl text-muted-foreground">
-          A production-ready TanStack Start + Convex template with email auth, real-time data,
-          and a built-in AI chat sidebar that can read and modify your data with your
-          confirmation. Open-source, MIT-licensed.
+        <p className="text-lg text-muted-foreground max-w-2xl">
+          Aggregate Perso + Pro inboxes with native Gmail threading, an AI assistant
+          that can summarize threads and draft replies, and reactive sync — no polling.
         </p>
 
         <div className="flex items-center gap-4">
@@ -49,16 +43,16 @@ function LandingPage() {
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
           <FeatureCard
-            title="Auth that just works"
-            body="Email + password signup. No forced MFA, no forced verification. Lands the user in /app on first try."
+            title="Multi-account"
+            body="Connect N Gmail accounts per user via OAuth or app-password fallback. All encrypted at rest."
           />
           <FeatureCard
-            title="Real-time todos"
-            body="A todos demo wired to Convex queries. Real-time updates across tabs and devices, no manual cache."
+            title="Reactive sync"
+            body="Cron + Gmail Push (Pub/Sub) keep your inbox fresh. The client subscribes to Convex queries — zero polling."
           />
           <FeatureCard
-            title="AI sidebar"
-            body="Persistent chat that can search your data and propose edits. Every write asks for your confirmation."
+            title="AI assistant"
+            body="Search threads, summarize conversations, draft replies. Every write requires your one-click confirm."
           />
         </div>
       </section>
@@ -83,8 +77,8 @@ function LandingPage() {
 function FeatureCard({ title, body }: { title: string; body: string }) {
   return (
     <div className="rounded-lg border border-border bg-card p-6">
-      <h3 className="albo-title mb-2">{title}</h3>
-      <p className="albo-paragraph text-muted-foreground">{body}</p>
+      <h3 className="text-base font-semibold tracking-tight mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground">{body}</p>
     </div>
   );
 }

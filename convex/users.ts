@@ -102,7 +102,7 @@ export const provisionMe = mutation({
   },
 });
 
-/** Internal helper used by todos.ts and agent.ts. Throws if not signed in or not provisioned. */
+/** Internal helper used by emails.ts, emailAccounts.ts, and agent.ts. Throws if not signed in or not provisioned. */
 export async function requireAppUser(ctx: QueryCtx | MutationCtx) {
   const authUser = (await authComponent.safeGetAuthUser(ctx)) as { _id: string } | null | undefined;
   if (!authUser) {
@@ -149,15 +149,16 @@ export const getStatsAdmin = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
-    const [users, todos] = await Promise.all([
+    const [users, accounts, emails] = await Promise.all([
       ctx.db.query('users').collect(),
-      ctx.db.query('todos').collect(),
+      ctx.db.query('emailAccounts').collect(),
+      ctx.db.query('emails').collect(),
     ]);
     return {
       totalUsers: users.length,
       totalAdmins: users.filter((u) => u.role === 'admin').length,
-      totalTodos: todos.length,
-      doneTodos: todos.filter((t) => t.done).length,
+      totalAccounts: accounts.length,
+      totalEmails: emails.length,
     };
   },
 });
