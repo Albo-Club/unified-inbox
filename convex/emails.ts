@@ -1,7 +1,6 @@
 import { ConvexError, v } from 'convex/values';
 import {
   action,
-  internalAction,
   internalMutation,
   internalQuery,
   mutation,
@@ -13,7 +12,6 @@ import {
 import type { Doc, Id } from './_generated/dataModel';
 import { api, internal } from './_generated/api';
 import { requireAppUser } from './users';
-import { sanitizeHtml } from './lib/sanitize';
 
 /* ============================================================================
  * Email CRUD — reads from the cache, writes through to Gmail/IMAP via actions.
@@ -522,28 +520,10 @@ export const setBodyStorage = internalMutation({
   },
 });
 
-/**
- * Action: sanitize + store + link a new HTML body for an email. Called from
- * gmail.fetchBody and imap.fetchBodyImap.
- */
-export const setBody = internalAction({
-  args: {
-    emailId: v.id('emails'),
-    bodyHtml: v.string(),
-    bodyText: v.optional(v.string()),
-  },
-  handler: async (ctx: ActionCtx, args) => {
-    const sanitized = sanitizeHtml(args.bodyHtml);
-    const storageId = await ctx.storage.store(
-      new Blob([sanitized], { type: 'text/html' }),
-    );
-    await ctx.runMutation(internal.emails.setBodyStorage, {
-      emailId: args.emailId,
-      bodyStorageId: storageId,
-      bodyText: args.bodyText,
-    });
-  },
-});
+/* Body storage: gmail.ts and imap.ts write Blobs directly into Convex Storage
+ * (they already run under 'use node') and then call setBodyStorage. We do NOT
+ * sanitize server-side: Convex's restricted Node runtime can't load jsdom
+ * reliably. The client sanitizes via src/lib/sanitize.ts before rendering. */
 
 /** Delete an email (used by trash flow that removes from cache entirely). */
 export const deleteEmail = internalMutation({
