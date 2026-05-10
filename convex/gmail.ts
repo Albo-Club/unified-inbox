@@ -408,9 +408,14 @@ export const fetchBody = internalAction({
       });
       const { html, text } = extractBodies(msg.data.payload);
       const final = html || `<pre>${text}</pre>`;
-      await ctx.runAction(internal.sanitize.setBody, {
+      // Store raw HTML — client (src/lib/sanitize.ts) sanitizes before render.
+      // Convex Node runtime can't run jsdom/isomorphic-dompurify reliably.
+      const storageId = await ctx.storage.store(
+        new Blob([final], { type: 'text/html' }),
+      );
+      await ctx.runMutation(internal.emails.setBodyStorage, {
         emailId: email._id,
-        bodyHtml: final,
+        bodyStorageId: storageId,
         bodyText: text || undefined,
       });
     } catch (err) {

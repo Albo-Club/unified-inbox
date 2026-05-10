@@ -259,9 +259,13 @@ export const fetchBodyImap = internalAction({
         const source = await client.download(uid, undefined, { uid: true });
         const parsed = await simpleParser(source.content);
         const html = parsed.html || parsed.textAsHtml || '';
-        await ctx.runAction(internal.sanitize.setBody, {
+        // Store raw HTML — client (src/lib/sanitize.ts) sanitizes before render.
+        const storageId = await ctx.storage.store(
+          new Blob([html], { type: 'text/html' }),
+        );
+        await ctx.runMutation(internal.emails.setBodyStorage, {
           emailId: email._id,
-          bodyHtml: html,
+          bodyStorageId: storageId,
           bodyText: parsed.text || undefined,
         });
       } finally {

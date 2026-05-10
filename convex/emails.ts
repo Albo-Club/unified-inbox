@@ -520,9 +520,10 @@ export const setBodyStorage = internalMutation({
   },
 });
 
-/* `setBody` (sanitize + store + link) lives in convex/sanitize.ts under
- * `'use node'` because `isomorphic-dompurify` needs the Node runtime.
- * Callers (gmail.ts, imap.ts) reference `internal.sanitize.setBody`. */
+/* Body storage: gmail.ts and imap.ts write Blobs directly into Convex Storage
+ * (they already run under 'use node') and then call setBodyStorage. We do NOT
+ * sanitize server-side: Convex's restricted Node runtime can't load jsdom
+ * reliably. The client sanitizes via src/lib/sanitize.ts before rendering. */
 
 /** Delete an email (used by trash flow that removes from cache entirely). */
 export const deleteEmail = internalMutation({
