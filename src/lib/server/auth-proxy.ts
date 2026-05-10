@@ -5,7 +5,17 @@ if (!convexUrl) {
   throw new Error('VITE_CONVEX_URL is not set');
 }
 
-function deriveSiteUrl(cloudUrl: string) {
+/**
+ * Resolve the Convex *site* URL (where HTTP actions like Better Auth live).
+ *   1. If VITE_CONVEX_SITE_URL is set (Convex CLI writes this for both cloud
+ *      and anonymous-local deployments), use it as-is.
+ *   2. Otherwise derive from the cloud URL by swapping `.convex.cloud` →
+ *      `.convex.site`. This fallback only works for cloud deployments; in
+ *      local mode the ports differ (3210 vs 3211) so the env var is required.
+ */
+function resolveSiteUrl(cloudUrl: string): string {
+  const explicit = process.env.VITE_CONVEX_SITE_URL;
+  if (explicit) return explicit;
   return cloudUrl.replace(/\.convex\.cloud(\/|$)/, '.convex.site$1');
 }
 
@@ -20,5 +30,5 @@ function deriveSiteUrl(cloudUrl: string) {
  */
 export const convexAuthReactStart = convexBetterAuthReactStart({
   convexUrl,
-  convexSiteUrl: deriveSiteUrl(convexUrl),
+  convexSiteUrl: resolveSiteUrl(convexUrl),
 });
