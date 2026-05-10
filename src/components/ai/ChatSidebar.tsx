@@ -1,17 +1,24 @@
 import { api } from '@convex/_generated/api';
 import type { Id } from '@convex/_generated/dataModel';
 import { useAction, useMutation } from 'convex/react';
-import { Loader2, Send, Sparkles } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { ExternalLink, Loader2, Mail, Send, Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { cn } from '~/lib/utils';
 
 type Role = 'user' | 'assistant' | 'system';
 
+type TodoActionType = 'create' | 'update' | 'toggle' | 'delete';
+// Match backend `PendingActionType` in convex/agent.ts.
+type EmailActionType = 'reply' | 'markRead' | 'archive' | 'trash';
+type ActionType = TodoActionType | EmailActionType;
+
 interface PendingAction {
   toolCallId: string;
-  type: 'create' | 'update' | 'toggle' | 'delete';
+  type: ActionType;
   payload: Record<string, unknown>;
   status: 'pending' | 'confirmed' | 'cancelled';
 }
@@ -36,6 +43,12 @@ export function ChatSidebar() {
   const updateTodo = useMutation(api.todos.update);
   const toggleTodo = useMutation(api.todos.toggle);
   const removeTodo = useMutation(api.todos.remove);
+
+  // Email mutations — wired to the unified-inbox backend.
+  const saveDraft = useMutation(api.emails.saveDraft);
+  const markRead = useMutation(api.emails.markRead);
+  const archiveEmail = useMutation(api.emails.archive);
+  const trashEmail = useMutation(api.emails.trash);
 
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [draft, setDraft] = useState('');
@@ -116,6 +129,61 @@ export function ChatSidebar() {
         case 'delete': {
           const p = action.payload as { id: string };
           await removeTodo({ id: p.id as Id<'todos'> });
+          break;
+        }
+        case 'reply': {
+          const p = action.payload as {
+            emailId: string;
+            bodyHtml: string;
+            to?: string;
+            cc?: string;
+            subject?: string;
+            accountId?: string;
+            mode?: 'reply' | 'replyAll' | 'forward' | 'new';
+          };
+          if (!p.accountId) {
+            throw new Error('Aucun compte cible pour le brouillon.');
+          }
+          await saveDraft({
+            accountId: p.accountId as Id<'emailAccounts'>,
+            to: p.to ?? '',
+            cc: p.cc ?? '',
+            subject: p.subject ?? '',
+            bodyHtml: p.bodyHtml,
+            inReplyToEmailId: p.emailId as Id<'emails'>,
+            mode: p.mode ?? 'reply',
+          });
+          toast.success('Brouillon enregistré');
+          break;
+        }
+        case 'markRead': {
+          const p = action.payload as { emailId: string; emailIds?: string[] };
+          const ids = p.emailIds ?? [p.emailId];
+          for (const id of ids) {
+            // eslint-disable-next-line no-await-in-loop
+            await markRead({ emailId: id as Id<'emails'>, isRead: true });
+          }
+          toast.success(ids.length > 1 ? `${ids.length} emails marqués lus` : 'Email marqué lu');
+          break;
+        }
+        case 'archive': {
+          const p = action.payload as { emailId: string; emailIds?: string[] };
+          const ids = p.emailIds ?? [p.emailId];
+          for (const id of ids) {
+            // eslint-disable-next-line no-await-in-loop
+            await archiveEmail({ emailId: id as Id<'emails'> });
+          }
+          toast.success(ids.length > 1 ? `${ids.length} emails archivés` : 'Email archivé');
+          break;
+        }
+        case 'trash': {
+          const p = action.payload as { emailId: string; emailIds?: string[] };
+          const ids = p.emailIds ?? [p.emailId];
+          for (const id of ids) {
+            // eslint-disable-next-line no-await-in-loop
+            await trashEmail({ emailId: id as Id<'emails'> });
+          }
+          toast.success(ids.length > 1 ? `${ids.length} emails supprimés` : 'Email supprimé');
           break;
         }
       }
@@ -238,6 +306,11 @@ function PendingActionCard({
 }) {
   const isPending = action.status === 'pending';
   const label = describeAction(action);
+  const isEmail =
+    action.type === 'reply' ||
+    action.type === 'markRead' ||
+    action.type === 'archive' ||
+    action.type === 'trash';
 
   return (
     <div
@@ -251,7 +324,11 @@ function PendingActionCard({
       )}
     >
       <div className="flex items-start gap-2">
-        <Sparkles className="size-3.5 mt-0.5 text-primary shrink-0" />
+        {isEmail ? (
+          <Mail className="size-3.5 mt-0.5 text-primary shrink-0" />
+        ) : (
+          <Sparkles className="size-3.5 mt-0.5 text-primary shrink-0" />
+        )}
         <div className="flex-1 min-w-0">
           <p className="font-medium text-xs uppercase tracking-wide text-primary mb-1">
             {action.status === 'confirmed'
@@ -261,6 +338,7 @@ function PendingActionCard({
                 : 'AI proposes'}
           </p>
           <p className="text-foreground">{label}</p>
+          {action.type === 'reply' && <ReplyPreview payload={action.payload} />}
         </div>
       </div>
       {isPending && (
@@ -294,5 +372,85 @@ function describeAction(a: PendingAction): string {
       return 'Toggle done state of a todo.';
     case 'delete':
       return 'Delete a todo.';
+    case 'reply':
+    case 'markRead':
+    case 'archive':
+    case 'trash':
+      return describeEmailAction(a);
   }
+}
+
+function describeEmailAction(a: PendingAction): string {
+  switch (a.type) {
+    case 'reply': {
+      const p = a.payload as { subject?: string; to?: string };
+      return p.subject
+        ? `Préparer une réponse à "${p.subject}"${p.to ? ` pour ${p.to}` : ''}.`
+        : 'Préparer une réponse à un email.';
+    }
+    case 'markRead': {
+      const p = a.payload as { emailIds?: string[] };
+      const n = p.emailIds?.length ?? 1;
+      return n > 1 ? `Marquer ${n} emails comme lus.` : 'Marquer cet email comme lu.';
+    }
+    case 'archive': {
+      const p = a.payload as { emailIds?: string[] };
+      const n = p.emailIds?.length ?? 1;
+      return n > 1 ? `Archiver ${n} emails.` : 'Archiver cet email.';
+    }
+    case 'trash': {
+      const p = a.payload as { emailIds?: string[] };
+      const n = p.emailIds?.length ?? 1;
+      return n > 1 ? `Supprimer ${n} emails.` : 'Supprimer cet email.';
+    }
+    default:
+      return '';
+  }
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
+}
+
+function ReplyPreview({ payload }: { payload: Record<string, unknown> }) {
+  const bodyHtml = typeof payload.bodyHtml === 'string' ? payload.bodyHtml : '';
+  const emailId = typeof payload.emailId === 'string' ? payload.emailId : '';
+  const mode = (typeof payload.mode === 'string' ? payload.mode : 'reply') as
+    | 'reply'
+    | 'replyAll'
+    | 'forward'
+    | 'new';
+  const text = stripHtml(bodyHtml);
+  const lines = text.split('\n').filter((l) => l.trim());
+  const preview = lines.slice(0, 3).join(' ');
+  const truncated = lines.length > 3 || preview.length > 200;
+
+  return (
+    <div className="mt-2 rounded-md border border-border/60 bg-background/40 p-2 space-y-2">
+      <p className="text-xs text-foreground/90 line-clamp-3 italic">
+        {preview.slice(0, 220)}
+        {truncated ? '…' : ''}
+      </p>
+      {emailId && (
+        <Link
+          to="/app/mail"
+          search={{ id: emailId, compose: mode } as never}
+          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+        >
+          <ExternalLink className="size-3" />
+          Ouvrir dans la rédaction
+        </Link>
+      )}
+    </div>
+  );
 }

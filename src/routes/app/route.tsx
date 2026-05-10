@@ -1,8 +1,18 @@
 import { createFileRoute, Link, Navigate, Outlet, useLocation } from '@tanstack/react-router';
 import { api } from '@convex/_generated/api';
 import { useMutation, useQuery } from 'convex/react';
-import { useEffect } from 'react';
-import { Check, LayoutDashboard, LogOut, Settings as SettingsIcon, Shield } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  Check,
+  LayoutDashboard,
+  LogOut,
+  Mail,
+  PanelRightClose,
+  PanelRightOpen,
+  Settings as SettingsIcon,
+  Shield,
+  Sparkles,
+} from 'lucide-react';
 import { authClient, useSession } from '~/lib/auth-client';
 import { Button } from '~/components/ui/button';
 import { ChatSidebar } from '~/components/ai/ChatSidebar';
@@ -17,6 +27,17 @@ function AppLayout() {
   const me = useQuery(api.users.me, sessionLoading || !session?.user ? 'skip' : {});
   const provisionMe = useMutation(api.users.provisionMe);
   const location = useLocation();
+
+  // The mail route owns the full middle/right space — hide the AI sidebar by
+  // default there. Outside of /app/mail we show it by default.
+  const isOnMailRoute = location.pathname.startsWith('/app/mail');
+  const [chatOpen, setChatOpen] = useState(!isOnMailRoute);
+
+  // Reset chat visibility whenever we cross the /app/mail boundary so users
+  // don't end up with a stale state after navigating.
+  useEffect(() => {
+    setChatOpen(!isOnMailRoute);
+  }, [isOnMailRoute]);
 
   /* Lazy provisioning: first time the user lands on /app after signup, the
    * `me` query returns `{ kind: 'unprovisioned' }`. Call `provisionMe` once to
@@ -43,9 +64,9 @@ function AppLayout() {
   const isAdmin = me.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className="min-h-screen h-screen bg-background text-foreground flex overflow-hidden">
       {/* Left nav */}
-      <aside className="w-56 border-r border-border/50 bg-card flex flex-col">
+      <aside className="w-56 border-r border-border/50 bg-card flex flex-col shrink-0">
         <Link to="/app" className="albo-title block px-6 py-5 border-b border-border/50">
           Albo MVP
         </Link>
@@ -55,6 +76,12 @@ function AppLayout() {
             label="Todos"
             icon={<LayoutDashboard className="size-4" />}
             current={location.pathname === '/app'}
+          />
+          <NavItem
+            to="/app/mail"
+            label="Mail"
+            icon={<Mail className="size-4" />}
+            current={location.pathname.startsWith('/app/mail')}
           />
           <NavItem
             to="/app/settings"
@@ -92,14 +119,36 @@ function AppLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
+      <main className="relative flex-1 overflow-hidden">
+        {/* Floating toggle for the AI sidebar — top-right of <main>. */}
+        <button
+          type="button"
+          onClick={() => setChatOpen((v) => !v)}
+          aria-label={chatOpen ? "Masquer l'assistant IA" : "Afficher l'assistant IA"}
+          className="absolute top-3 right-3 z-30 hidden lg:inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card/90 backdrop-blur px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors shadow-sm"
+        >
+          {chatOpen ? (
+            <>
+              <PanelRightClose className="size-3.5" /> Assistant
+            </>
+          ) : (
+            <>
+              <Sparkles className="size-3.5 text-primary" />
+              <PanelRightOpen className="size-3.5" /> Assistant
+            </>
+          )}
+        </button>
+        <div className="h-full overflow-y-auto">
+          <Outlet />
+        </div>
       </main>
 
       {/* Right AI sidebar */}
-      <aside className="w-[380px] border-l border-border/50 bg-card hidden lg:flex flex-col">
-        <ChatSidebar />
-      </aside>
+      {chatOpen && (
+        <aside className="w-[380px] border-l border-border/50 bg-card hidden lg:flex flex-col shrink-0">
+          <ChatSidebar />
+        </aside>
+      )}
     </div>
   );
 }
