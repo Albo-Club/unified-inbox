@@ -141,7 +141,7 @@ function EmailRow({
           {email.sender || email.senderEmail}
         </span>
         {!email.isRead && (
-          <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Non lu" />
+          <span className="size-2 shrink-0 rounded-full bg-foreground" aria-label="Non lu" />
         )}
         {email.isStarred && (
           <Star className="size-3.5 shrink-0 fill-current text-accent" aria-label="Suivi" />

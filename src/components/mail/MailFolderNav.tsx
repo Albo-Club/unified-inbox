@@ -34,7 +34,7 @@ export function MailFolderNav({
   return (
     <div className="flex h-full flex-col border-r border-border/50 bg-card">
       <div className="px-4 py-4 border-b border-border/50">
-        <h2 className="albo-title text-lg">Mail</h2>
+        <h2 className="text-sm font-semibold tracking-tight">Mail</h2>
       </div>
 
       <nav className="px-2 py-3 space-y-0.5">
@@ -48,7 +48,7 @@ export function MailFolderNav({
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-left transition-colors',
                 active
-                  ? 'bg-primary/10 text-foreground font-medium'
+                  ? 'bg-accent text-accent-foreground font-medium'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >

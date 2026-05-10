@@ -126,7 +126,7 @@ export function EmailView({ emailId, email, onReply, onReplyAll, onForward, onCl
   if (!email) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center p-8 text-muted-foreground">
-        <p className="albo-paragraph">Sélectionnez un email pour le lire.</p>
+        <p className="text-sm">Sélectionnez un email pour le lire.</p>
       </div>
     );
   }
@@ -149,7 +149,7 @@ export function EmailView({ emailId, email, onReply, onReplyAll, onForward, onCl
       {/* Header */}
       <div className="shrink-0 px-6 py-4 border-b border-border/50">
         <div className="flex items-start justify-between gap-4">
-          <h1 className="albo-title text-xl leading-snug">{email.subject || '(Sans objet)'}</h1>
+          <h1 className="text-xl font-semibold tracking-tight leading-snug">{email.subject || '(Sans objet)'}</h1>
           <Badge variant="outline" className="shrink-0" title={email.accountId}>
             {email.accountId.slice(0, 6)}
           </Badge>

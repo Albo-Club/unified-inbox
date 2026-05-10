@@ -150,7 +150,7 @@ export function EmailComposer({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl p-0 gap-0 sm:rounded-lg overflow-hidden">
         <DialogHeader className="px-6 py-3 border-b border-border/50">
-          <DialogTitle className="albo-title text-base flex items-center justify-between">
+          <DialogTitle className="text-base font-semibold tracking-tight flex items-center justify-between">
             <span>{composeTitles[initial.mode]}</span>
             <Button
               type="button"

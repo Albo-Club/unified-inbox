@@ -76,8 +76,8 @@ function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl px-8 py-10 space-y-12">
       <section>
-        <h1 className="albo-h2 mb-1">Settings</h1>
-        <p className="albo-paragraph text-muted-foreground mb-8">Manage your profile.</p>
+        <h1 className="text-2xl font-semibold tracking-tight mb-1">Settings</h1>
+        <p className="text-sm text-muted-foreground mb-8">Manage your profile.</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
@@ -134,8 +134,8 @@ function EmailAccountsSection() {
 
   return (
     <section id="email-accounts" className="scroll-mt-10">
-      <h2 className="albo-title text-xl mb-1">Comptes email</h2>
-      <p className="albo-paragraph text-muted-foreground mb-6">
+      <h2 className="text-xl font-semibold tracking-tight mb-1">Comptes email</h2>
+      <p className="text-sm text-muted-foreground mb-6">
         Connecte un ou plusieurs comptes pour les agréger dans la boîte unifiée.
       </p>
 
