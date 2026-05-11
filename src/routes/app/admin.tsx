@@ -16,8 +16,8 @@ function AdminPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-8 py-10">
-      <h1 className="albo-h2 mb-1">Admin</h1>
-      <p className="albo-paragraph text-muted-foreground mb-8">
+      <h1 className="text-2xl font-semibold tracking-tight mb-1">Admin</h1>
+      <p className="text-sm text-muted-foreground mb-8">
         You see this because you were the first user to sign up.
       </p>
 
@@ -30,7 +30,7 @@ function AdminPage() {
         </div>
       )}
 
-      <h2 className="albo-title mb-3">Users</h2>
+      <h2 className="text-lg font-semibold tracking-tight mb-3">Users</h2>
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted text-muted-foreground">
@@ -50,7 +50,7 @@ function AdminPage() {
                   <span
                     className={
                       u.role === 'admin'
-                        ? 'inline-flex items-center rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium'
+                        ? 'inline-flex items-center rounded-full bg-foreground text-background px-2 py-0.5 text-xs font-medium'
                         : 'inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground'
                     }
                   >
@@ -73,7 +73,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border border-border bg-card px-5 py-4">
       <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
-      <p className="albo-h3 mt-1">{value}</p>
+      <p className="text-2xl font-semibold tracking-tight mt-1">{value}</p>
     </div>
   );
 }

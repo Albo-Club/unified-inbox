@@ -129,7 +129,7 @@ function AppLayout() {
             </>
           ) : (
             <>
-              <Sparkles className="size-3.5 text-primary" />
+              <Sparkles className="size-3.5" />
               <PanelRightOpen className="size-3.5" /> Assistant
             </>
           )}
@@ -166,7 +166,7 @@ function NavItem({
       className={cn(
         'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
         current
-          ? 'bg-primary/10 text-foreground font-medium'
+          ? 'bg-muted text-foreground font-medium'
           : 'text-muted-foreground hover:bg-muted hover:text-foreground',
       )}
     >

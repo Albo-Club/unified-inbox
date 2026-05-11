@@ -183,8 +183,8 @@ export function ChatSidebar() {
   return (
     <div className="flex flex-col h-full">
       <header className="px-5 py-4 border-b border-border/50 flex items-center gap-2">
-        <Sparkles className="size-4 text-primary" />
-        <h2 className="albo-title text-base">AI assistant</h2>
+        <Sparkles className="size-4" />
+        <h2 className="text-sm font-semibold tracking-tight">AI assistant</h2>
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
@@ -275,16 +275,14 @@ function PendingActionCard({
       className={cn(
         'w-full rounded-lg border px-3 py-2.5 text-sm',
         isPending
-          ? 'border-primary/30 bg-primary/5'
-          : action.status === 'confirmed'
-            ? 'border-success/30 bg-success/5 text-muted-foreground'
-            : 'border-border bg-muted text-muted-foreground',
+          ? 'border-foreground/40 bg-muted/40'
+          : 'border-border bg-muted text-muted-foreground',
       )}
     >
       <div className="flex items-start gap-2">
-        <Mail className="size-3.5 mt-0.5 text-primary shrink-0" />
+        <Mail className="size-3.5 mt-0.5 shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-xs uppercase tracking-wide text-primary mb-1">
+          <p className="font-medium text-xs uppercase tracking-wide mb-1">
             {action.status === 'confirmed'
               ? '✓ Done'
               : action.status === 'cancelled'
@@ -372,7 +370,7 @@ function ReplyPreview({ payload }: { payload: Record<string, unknown> }) {
         <Link
           to="/app/mail"
           search={{ id: emailId, compose: mode } as never}
-          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          className="inline-flex items-center gap-1 text-xs underline-offset-2 hover:underline"
         >
           <ExternalLink className="size-3" />
           Ouvrir dans la rédaction

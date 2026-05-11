@@ -7,6 +7,12 @@ import { MailFolderNav } from '~/components/mail/MailFolderNav';
 import { EmailList } from '~/components/mail/EmailList';
 import { EmailView } from '~/components/mail/EmailView';
 import { EmailComposer } from '~/components/mail/EmailComposer';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '~/components/ui/resizable';
+import { TooltipProvider } from '~/components/ui/tooltip';
 import type { ComposeMode, ComposeState, EmailFolder } from '~/types/email';
 import { buildComposeState } from '~/types/email';
 
@@ -26,7 +32,6 @@ export const Route = createFileRoute('/app/mail')({
   component: MailPage,
 });
 
-// Folders the backend's `listByFolder` query supports.
 type ListableFolder = 'inbox' | 'sent' | 'trash' | 'starred' | 'all';
 function toListableFolder(f: EmailFolder): ListableFolder {
   return f === 'archive' ? 'all' : (f as ListableFolder);
@@ -41,11 +46,8 @@ function MailPage() {
   const composeMode = search.compose;
 
   const meQuery = useQuery(api.users.me, {});
-  const myEmail =
-    meQuery && meQuery.kind === 'ready' ? meQuery.email : '';
+  const myEmail = meQuery && meQuery.kind === 'ready' ? meQuery.email : '';
 
-  // Same list the EmailList queries — used here to resolve the selected row's
-  // header data without an extra round trip. Convex de-dupes the subscription.
   const emails = useQuery(api.emails.listByFolder, {
     folder: toListableFolder(folder),
   });
@@ -66,29 +68,22 @@ function MailPage() {
 
   const setSelected = useCallback(
     (id: string | undefined) => {
-      void navigate({
-        search: (prev: MailSearch) => ({ ...prev, id }),
-      });
+      void navigate({ search: (prev: MailSearch) => ({ ...prev, id }) });
     },
     [navigate],
   );
 
   const openCompose = useCallback(
     (mode: ComposeMode) => {
-      void navigate({
-        search: (prev: MailSearch) => ({ ...prev, compose: mode }),
-      });
+      void navigate({ search: (prev: MailSearch) => ({ ...prev, compose: mode }) });
     },
     [navigate],
   );
 
   const closeCompose = useCallback(() => {
-    void navigate({
-      search: (prev: MailSearch) => ({ ...prev, compose: undefined }),
-    });
+    void navigate({ search: (prev: MailSearch) => ({ ...prev, compose: undefined }) });
   }, [navigate]);
 
-  // Build a compose state when reply/forward is opened on an email.
   const composeInitial: ComposeState | null = useMemo(() => {
     if (!composeMode) return null;
     if (composeMode === 'new' || !selectedEmail) {
@@ -105,26 +100,32 @@ function MailPage() {
   }, [composeMode, selectedEmail, myEmail]);
 
   return (
-    <div className="flex h-full overflow-hidden">
-      {/* Folder nav (left within page) */}
-      <div className="w-60 shrink-0 hidden md:block">
-        <MailFolderNav currentFolder={folder} onSelectFolder={setFolder} />
-      </div>
+    <TooltipProvider delayDuration={0}>
+      <ResizablePanelGroup direction="horizontal" className="h-full items-stretch">
+        <ResizablePanel defaultSize={20} minSize={15} maxSize={25}>
+          <MailFolderNav currentFolder={folder} onSelectFolder={setFolder} />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={32} minSize={28}>
+          <EmailList
+            folder={folder}
+            selectedId={selectedId}
+            onSelect={(id) => setSelected(id)}
+          />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={48}>
+          <EmailView
+            emailId={selectedId ?? ''}
+            email={selectedEmail}
+            onReply={() => openCompose('reply')}
+            onReplyAll={() => openCompose('replyAll')}
+            onForward={() => openCompose('forward')}
+            onClose={() => setSelected(undefined)}
+          />
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
-      {/* List */}
-      <EmailList folder={folder} selectedId={selectedId} onSelect={(id) => setSelected(id)} />
-
-      {/* Reading pane */}
-      <EmailView
-        emailId={selectedId ?? ''}
-        email={selectedEmail}
-        onReply={() => openCompose('reply')}
-        onReplyAll={() => openCompose('replyAll')}
-        onForward={() => openCompose('forward')}
-        onClose={() => setSelected(undefined)}
-      />
-
-      {/* Compose overlay */}
       {composeMode && composeInitial && (
         <EmailComposer
           open
@@ -133,6 +134,6 @@ function MailPage() {
           defaultAccountId={selectedEmail?.accountId}
         />
       )}
-    </div>
+    </TooltipProvider>
   );
 }
