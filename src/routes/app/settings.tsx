@@ -165,7 +165,7 @@ function EmailAccountsSection() {
                 <Badge variant={a.authType === 'oauth' ? 'secondary' : 'outline'}>
                   {a.authType === 'oauth' ? 'OAuth' : 'IMAP'}
                 </Badge>
-                <Badge variant={a.status === 'active' ? 'success' : 'outline'}>
+                <Badge variant={a.status === 'active' ? 'secondary' : 'outline'}>
                   {a.status ?? 'unknown'}
                 </Badge>
                 {a.lastSyncAt && (

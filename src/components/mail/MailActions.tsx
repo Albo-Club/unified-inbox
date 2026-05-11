@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { Archive, Forward, Reply, ReplyAll, Star, StarOff, Trash2 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
+import { Separator } from '~/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
 
 export type MailActionHandlers = {
   onArchive: () => void;
@@ -12,15 +14,6 @@ export type MailActionHandlers = {
   isStarred?: boolean;
 };
 
-/**
- * Action toolbar for the reading pane. Hosts keyboard shortcuts:
- *  - `r`        reply
- *  - `Shift+R`  reply all
- *  - `f`        forward
- *  - `e`        archive
- *  - `#` / `Backspace` trash
- *  - `s`        star/unstar
- */
 export function MailActions({
   onArchive,
   onTrash,
@@ -32,7 +25,6 @@ export function MailActions({
 }: MailActionHandlers) {
   useEffect(() => {
     function handler(e: KeyboardEvent) {
-      // Ignore when typing in a form field / contenteditable
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -69,30 +61,52 @@ export function MailActions({
   }, [onArchive, onTrash, onReply, onReplyAll, onForward, onToggleStar]);
 
   return (
-    <div className="flex items-center gap-1">
-      <Button variant="ghost" size="sm" onClick={onArchive} title="Archiver (e)">
+    <div className="flex items-center gap-2">
+      <ToolbarButton onClick={onArchive} label="Archiver" shortcut="e">
         <Archive className="size-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onTrash} title="Supprimer (#)">
+      </ToolbarButton>
+      <ToolbarButton onClick={onTrash} label="Supprimer" shortcut="#">
         <Trash2 className="size-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onToggleStar} title="Suivre (s)">
-        {isStarred ? (
-          <StarOff className="size-4" />
-        ) : (
-          <Star className="size-4" />
-        )}
-      </Button>
-      <div className="mx-1 h-5 w-px bg-border" />
-      <Button variant="ghost" size="sm" onClick={onReply} title="Répondre (r)">
+      </ToolbarButton>
+      <ToolbarButton onClick={onToggleStar} label={isStarred ? 'Retirer des suivis' : 'Suivre'} shortcut="s">
+        {isStarred ? <StarOff className="size-4" /> : <Star className="size-4" />}
+      </ToolbarButton>
+      <Separator orientation="vertical" className="mx-1 h-6" />
+      <ToolbarButton onClick={onReply} label="Répondre" shortcut="r">
         <Reply className="size-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onReplyAll} title="Répondre à tous (Shift+R)">
+      </ToolbarButton>
+      <ToolbarButton onClick={onReplyAll} label="Répondre à tous" shortcut="⇧R">
         <ReplyAll className="size-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onForward} title="Transférer (f)">
+      </ToolbarButton>
+      <ToolbarButton onClick={onForward} label="Transférer" shortcut="f">
         <Forward className="size-4" />
-      </Button>
+      </ToolbarButton>
     </div>
+  );
+}
+
+function ToolbarButton({
+  onClick,
+  label,
+  shortcut,
+  children,
+}: {
+  onClick: () => void;
+  label: string;
+  shortcut?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="ghost" size="icon" onClick={onClick} aria-label={label}>
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        {label}
+        {shortcut && <span className="ml-2 text-muted-foreground/80">{shortcut}</span>}
+      </TooltipContent>
+    </Tooltip>
   );
 }

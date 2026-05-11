@@ -43,12 +43,12 @@ function LoginPage() {
   return (
     <main className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <Link to="/" className="albo-title text-foreground block mb-8">
-          Albo MVP
+        <Link to="/" className="text-base font-semibold tracking-tight text-foreground block mb-8">
+          Unified Inbox
         </Link>
 
-        <h1 className="albo-h3 mb-2">Welcome back</h1>
-        <p className="albo-paragraph text-muted-foreground mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight mb-2">Welcome back</h1>
+        <p className="text-sm text-muted-foreground mb-8">
           Sign in to your account to continue.
         </p>
 
