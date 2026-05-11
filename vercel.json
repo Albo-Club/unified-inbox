@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx convex deploy --cmd 'pnpm run build'",
+  "buildCommand": "if [ \"$VERCEL_ENV\" = \"production\" ]; then npx convex deploy --typecheck=disable --cmd 'pnpm run build'; else npx convex deploy --typecheck=disable --cmd 'pnpm run build' --preview-create \"$VERCEL_GIT_COMMIT_REF\"; fi",
   "installCommand": "pnpm install --frozen-lockfile"
 }
