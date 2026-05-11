@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     tanstackStart({
-      target: 'node-server',
+      target: process.env.VERCEL ? 'vercel' : 'node-server',
       tsr: {
         autoCodeSplitting: true,
       },
